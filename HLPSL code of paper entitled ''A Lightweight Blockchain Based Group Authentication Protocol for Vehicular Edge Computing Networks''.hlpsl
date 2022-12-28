@@ -1,0 +1,263 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+role admin (SA,TA,V1,V,R1:agent,KTA:text,SKTA:symmetric_key,
+H:hash_func,Snd,Rcv:channel(dy))
+played_by SA
+def=
+local State:nat,
+SK,SKV,SKR:symmetric_key,
+AV1,IDV1:text,
+BV1:hash(text),
+CV1:{hash(text.text)}_symmetric_key,
+
+AV,IDV:text,
+BV:hash(text),
+CV:{hash(text.text)}_symmetric_key,
+
+AR1,IDR1:text,
+BR1:hash(text),
+CR1:{hash(text.text)}_symmetric_key
+
+const secKTA,secIDV1,secIDV,secIDR1,trusted_authority:protocol_id
+init State:=0
+transition
+1.State=0/\Rcv(start)=|>State':=1/\
+IDV1':=new()/\IDV':=new()/\KTA':=new()/\IDR1':=new()/\
+SKTA':=new()/\
+
+SK':=new()/\SKV':=new()/\SKR':=new()/\
+%V1
+AV1':=xor(IDV1',KTA')/\
+BV1':=H(IDV1')/\
+CV1':={H(IDV1'.KTA')}_SKTA'/\
+
+%V
+AV':=xor(IDV',KTA')/\
+BV':=H(IDV')/\
+CV':={H(IDV'.KTA')}_SKTA'/\
+
+%R1
+AR1':=xor(IDR1',KTA')/\
+BR1':=H(IDR1')/\
+CR1':={H(IDR1'.KTA')}_SKTA'/\
+
+Snd({AV1'.BV1'.CV1'}_SK')/\
+Snd({AV'.BV'.CV'}_SKV')/\
+Snd({AR1'.BR1'.CR1'}_SKR')
+end role
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+role vehicle1 (SA,TA,V1,V,R1:agent,H:hash_func,
+Snd,Rcv:channel(dy))
+played_by V1
+def=
+local State:nat,
+IDV1,XV1,RV1,TV1,TTA,LV1,KTA,AV1,AV1new:text,
+BV1:hash(text),SK:symmetric_key,
+BV1new:hash(text),
+
+TIDTAV1:hash(text.text.text.text.text),
+GK:hash(text.text),
+CV1:{hash(text.text)}_symmetric_key,
+CV1new:{hash(text.text)}_symmetric_key,
+MV1:{text.text.text.text.text}_symmetric_key
+const secKTA,secIDV1,trusted_authority:protocol_id
+init State:=0
+transition
+1.State=0/\Rcv({AV1'.BV1'.CV1'}_SK')=|>State':=1/\
+RV1':=new()/\TV1':=new()/\
+XV1':=xor(BV1',RV1')/\
+
+secret(KTA,secKTA,{SA,TA})/\
+secret(IDV1,secIDV1,{SA,V1,TA})/\
+Snd(AV1'.XV1'.TV1'.CV1')
+
+2.State=1/\Rcv(MV1'.TTA')=|>State':=2/\
+GK':=H(LV1.RV1)/\
+TIDTAV1':=H(AV1new.BV1new.CV1new.GK.TTA')/\
+AV1':=AV1new/\BV1':=BV1new/\CV1':=CV1new/\
+secret(IDV1,secIDV1,{SA,V1,TA})/\secret(KTA,secKTA,{SA,TA})
+end role
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+role vehicle2 (SA,TA,V1,V,R1:agent,H:hash_func,
+Snd,Rcv:channel(dy))
+played_by V
+def=
+local State:nat,
+IDV,XV,RV,TV,TTA,LV,KTA,AV,AVnew:text,
+BV:hash(text),SKV:symmetric_key,
+BVnew:hash(text),
+
+TIDTAV:hash(text.text.text.text.text),
+GK:hash(text.text),
+CV:{hash(text.text)}_symmetric_key,
+CVnew:{hash(text.text)}_symmetric_key,
+MV:{text.text.text.text.text}_symmetric_key
+const secKTA,secIDV,trusted_authority:protocol_id
+init State:=0
+transition
+1.State=0/\Rcv({AV'.BV'.CV'}_SKV')=|>State':=1/\
+RV':=new()/\TV':=new()/\
+XV':=xor(BV',RV')/\
+
+secret(KTA,secKTA,{SA,TA})/\
+secret(IDV,secIDV,{SA,V,TA})/\
+Snd(AV'.XV'.TV'.CV')
+
+2.State=1/\Rcv(MV'.TTA')=|>State':=2/\
+GK':=H(LV.RV)/\
+TIDTAV':=H(AVnew.BVnew.CVnew.GK.TTA')/\
+AV':=AVnew/\BV':=BVnew/\CV':=CVnew/\
+secret(IDV,secIDV,{SA,V,TA})/\secret(KTA,secKTA,{SA,TA})
+end role
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+role roadside (SA,TA,V1,V,R1:agent,H:hash_func,
+Snd,Rcv:channel(dy))
+played_by R1
+def=
+local State:nat,
+IDR1,XR1,RR1,TR1,TTA,LR1,KTA,AR1,AR1new:text,
+BR1:hash(text),SKR:symmetric_key,
+BR1new:hash(text),
+
+TIDTAR1:hash(text.text.text.text.text),
+GK:hash(text.text),
+CR1:{hash(text.text)}_symmetric_key,
+CR1new:{hash(text.text)}_symmetric_key,
+MR1:{text.text.text.text.text}_symmetric_key
+const secKTA,secIDR1,trusted_authority:protocol_id
+init State:=0
+transition
+1.State=0/\Rcv({AR1'.BR1'.CR1'}_SKR')=|>State':=1/\
+RR1':=new()/\TR1':=new()/\
+XR1':=xor(BR1',RR1')/\
+
+secret(KTA,secKTA,{SA,TA})/\
+secret(IDR1,secIDR1,{SA,R1,TA})/\
+Snd(AR1'.XR1'.TR1'.CR1')
+
+2.State=1/\Rcv(MR1'.TTA')=|>State':=2/\
+GK':=H(LR1.RR1)/\
+TIDTAR1':=H(AR1new.BR1new.CR1new.GK.TTA')/\
+AR1':=AR1new/\BR1':=BR1new/\CR1':=CR1new/\
+secret(IDR1,secIDR1,{SA,R1,TA})/\secret(KTA,secKTA,{SA,TA})
+end role
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+role authority(SA,TA,V1,V,R1:agent,KTA:text,SKTA:symmetric_key,
+H:hash_func,Snd,Rcv:channel(dy))
+played_by TA
+def=
+local State:nat,
+IDV1,IDV1new,XV1,RV1,LV1,TV1,RTA,TTA,AV1,AV1new:text,
+IDV,IDVnew,XV,RV,LV,TV,AV,AVnew:text,
+IDR1,IDR1new,XR1,RR1,LR1,TR1,AR1,AR1new:text,
+BV1:hash(text),
+BV:hash(text),
+BR1:hash(text),
+BV1new:hash(text),
+BVnew:hash(text),
+BR1new:hash(text),
+
+TIDTAV1:hash(text.text.text.text.text),
+TIDTAV:hash(text.text.text.text.text),
+TIDTAR1:hash(text.text.text.text.text),
+GK1:hash(text.text.text.text),
+
+CV1:{hash(text.text)}_symmetric_key,
+CV1new:{hash(text.text)}_symmetric_key,
+CV:{hash(text.text)}_symmetric_key,
+CVnew:{hash(text.text)}_symmetric_key,
+CR1:{hash(text.text)}_symmetric_key,
+CR1new:{hash(text.text)}_symmetric_key,
+
+MV1:{text.text.text.text.text}_symmetric_key,
+MV:{text.text.text.text.text}_symmetric_key,
+MR1:{text.text.text.text.text}_symmetric_key
+const secKTA,secIDV1,trusted_authority:protocol_id
+init State:=0
+transition
+1.State=0/\Rcv(AV1'.XV1'.TV1'.CV1')=|>State':=1
+2.State=1/\Rcv(AV'.XV'.TV'.CV')=|>State':=2
+3.State=2/\Rcv(AR1'.XR1'.TR1'.CR1')=|>State':=3/\
+KTA':=new()/\
+%V1
+IDV1':=xor(AV1,KTA')/\
+BV1':=H(IDV1')/\
+RV1':=xor(XV1,BV1')/\
+IDV1new':=new()/\
+AV1new':=xor(IDV1new',KTA')/\
+BV1new':=H(IDV1new')/\
+CV1new':={H(IDV1new'.KTA')}_SKTA/\
+
+%V
+IDV':=xor(AV,KTA')/\
+BV':=H(IDV')/\
+RV':=xor(XV,BV')/\
+IDVnew':=new()/\
+AVnew':=xor(IDVnew',KTA')/\
+BVnew':=H(IDVnew')/\
+CVnew':={H(IDV'.KTA')}_SKTA/\
+
+%R1
+IDR1':=xor(AR1,KTA')/\
+BR1':=H(IDR1')/\
+RR1':=xor(XR1,BR1')/\
+IDR1new':=new()/\
+AR1new':=xor(IDR1new',KTA')/\
+BR1new':=H(IDR1new')/\
+CR1new':={H(IDR1'.KTA')}_SKTA/\
+
+LV1':=xor(RV',xor(RR1',RTA'))/\
+LV':=xor(RV',xor(RR1',RTA'))/\
+LR1':=xor(RV1',xor(RV',RTA'))/\
+
+RTA':=new()/\
+TTA':=new()/\
+GK1':=H(RV1',RV'.RR1'.RTA')/\
+
+TIDTAV1':=H(AV1new'.BV1new'.CV1new'.GK1'.TTA')/\
+MV1':={AV1new'.BV1new'.CV1new'.LV1}_BV1'/\
+
+TIDTAV':=H(AVnew'.BVnew'.CVnew'.GK1'.TTA')/\
+MV':={AVnew'.BVnew'.CVnew'.LV}_BV'/\
+
+TIDTAR1':=H(AR1new'.BR1new'.CR1new'.GK1'.TTA')/\
+MR1':={AR1new'.BR1new'.CR1new'.LR1}_BR1'/\
+
+secret(IDV1,secIDV1,{SA,V1,TA})/\secret(KTA',secKTA,{SA,TA})/\
+secret(IDV,secIDV,{SA,V,TA})/\
+secret(IDR1,secIDR1,{SA,R1,TA})/\
+
+
+Snd(MV1'.TTA')/\
+Snd(MV'.TTA')/\
+Snd(MR1'.TTA')
+end role
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+role session (SA,TA,V1,V,R1:agent,KTA,IDV1,IDR1:text,SKTA:symmetric_key,
+H:hash_func)
+def=
+local SSAch,RSAch,STAch,RTAch,SV1ch,RV1ch,SVch,RVch,SR1ch,RR1ch:channel(dy)
+composition
+admin(SA,TA,V1,V,R1,KTA,SKTA,H,SSAch,RSAch)/\
+authority(SA,TA,V1,V,R1,KTA,SKTA,H,STAch,RTAch)/\
+vehicle1(SA,TA,V1,V,R1,H,SV1ch,RV1ch)/\
+vehicle2(SA,TA,V1,V,R1,H,SVch,RVch)/\
+roadside(SA,TA,V1,V,R1,H,SR1ch,RR1ch)
+end role
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+role environment()
+def=
+const sa,ta,v1,v,r1:agent,kta,idv1,idr1:text,skta:symmetric_key,h:hash_func,
+seckta,secidv1,secidv,secidr1,trusted_authority:protocol_id
+intruder_knowledge={sa,ta,v1,v,r1,h}
+composition
+session(sa,ta,v1,v,r1,kta,idv1,idr1,skta,h)
+end role
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+goal 
+secrecy_of secKTA
+secrecy_of secIDV1
+secrecy_of secIDV
+secrecy_of secIDR1
+authentication_on trusted_authority
+end goal
+environment()
